@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reserva de mesa</title>
+  <style>
+    body {
+      background: #14110f;
+      color: #f2ede4;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .tarjeta {
+      width: 100%;
+      max-width: 400px;
+      background: #1e1a17;
+      border: 1px solid #3a332c;
+      border-radius: 6px;
+      padding: 30px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    .sub {
+      color: #9c948a;
+      font-size: 14px;
+      margin: 0 0 20px;
+    }
+
+    .campo {
+      margin-bottom: 16px;
+    }
+
+    .campo label {
+      display: block;
+      font-size: 13px;
+      color: #9c948a;
+      margin-bottom: 6px;
+    }
+
+    .campo input {
+      width: 100%;
+      background: #262019;
+      border: 1px solid #3a332c;
+      border-radius: 4px;
+      color: #f2ede4;
+      font-size: 15px;
+      padding: 9px 10px;
+      box-sizing: border-box;
+    }
+
+    .valido input {
+      border-color: #6f9a6a;
+    }
+
+    .invalido input {
+      border-color: #c0523b;
+    }
+
+    .mensaje {
+      display: block;
+      min-height: 15px;
+      font-size: 12.5px;
+      margin-top: 5px;
+    }
+
+    .mensaje.error { color: #c0523b; }
+    .mensaje.exito { color: #6f9a6a; }
+
+    #estado {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid #3a332c;
+      font-size: 13px;
+      color: #9c948a;
+    }
+
+    #estado.listo { color: #6f9a6a; }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 11px;
+      background: #c9a227;
+      border: none;
+      border-radius: 4px;
+      color: #1a1509;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    button.habilitado {
+      cursor: pointer;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tarjeta">
+    <h1>Reserva de mesa</h1>
+    <p class="sub">Completa tus datos.</p>
+
+    <div class="campo" id="campo-nombre">
+      <label for="nombre">Nombre completo</label>
+      <input type="text" id="nombre">
+      <span class="mensaje" id="mensaje-nombre"></span>
+    </div>
+
+    <div class="campo" id="campo-correo">
+      <label for="correo">Correo electrónico</label>
+      <input type="text" id="correo">
+      <span class="mensaje" id="mensaje-correo"></span>
+    </div>
+
+    <div class="campo" id="campo-telefono">
+      <label for="telefono">Teléfono (8 dígitos)</label>
+      <input type="text" id="telefono">
+      <span class="mensaje" id="mensaje-telefono"></span>
+    </div>
+
+    <div class="campo" id="campo-comensales">
+      <label for="comensales">Número de comensales (1-12)</label>
+      <input type="text" id="comensales">
+      <span class="mensaje" id="mensaje-comensales"></span>
+    </div>
+
+    <p id="estado">Estado: pendiente</p>
+    <button id="btnConfirmar" disabled>Confirmar reserva</button>
+  </div>
+
+  <script>
+
+    let estadoCampos = {
+      nombre: false,
+      correo: false,
+      telefono: false,
+      comensales: false
+    };
+
+    function mostrarResultado(idCampo, idMensaje, esValido, texto) {
+      const campo = document.getElementById(idCampo);
+      const mensaje = document.getElementById(idMensaje);
+
+      mensaje.textContent = texto;
+
+      if (esValido) {
+        mensaje.classList.add("exito");
+        mensaje.classList.remove("error");
+        campo.classList.add("valido");
+        campo.classList.remove("invalido");
+      } else {
+        mensaje.classList.add("error");
+        mensaje.classList.remove("exito");
+        campo.classList.add("invalido");
+        campo.classList.remove("valido");
+      }
+    }
+
+    function actualizarEstadoGeneral() {
+      const todosValidos =
+        estadoCampos.nombre &&
+        estadoCampos.correo &&
+        estadoCampos.telefono &&
+        estadoCampos.comensales;
+
+      const estado = document.getElementById("estado");
+      const boton = document.getElementById("btnConfirmar");
+
+      if (todosValidos) {
+        estado.textContent = "Estado: confirmada";
+        estado.classList.add("listo");
+        boton.disabled = false;
+        boton.classList.add("habilitado");
+      } else {
+        estado.textContent = "Estado: pendiente";
+        estado.classList.remove("listo");
+        boton.disabled = true;
+        boton.classList.remove("habilitado");
+      }
+    }
+
+    function validarNombre() {
+      const valor = document.getElementById("nombre").value.trim();
+      let valido = false;
+      let texto = "";
+
+      if (valor.length === 0) {
+        texto = "Este campo es obligatorio.";
+      } else if (valor.length < 3) {
+        texto = "Escribe al menos 3 caracteres.";
+      } else if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(valor)) {
+        texto = "Solo se permiten letras y espacios.";
+      } else {
+        valido = true;
+        texto = "Nombre válido.";
+      }
+
+      estadoCampos.nombre = valido;
+      mostrarResultado("campo-nombre", "mensaje-nombre", valido, texto);
+      actualizarEstadoGeneral();
+    }
+
+    function validarCorreo() {
+      const valor = document.getElementById("correo").value.trim();
+      let valido = false;
+      let texto = "";
+      const patron = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (valor.length === 0) {
+        texto = "Este campo es obligatorio.";
+      } else if (!patron.test(valor)) {
+        texto = "Formato de correo no válido.";
+      } else {
+        valido = true;
+        texto = "Correo válido.";
+      }
+
+      estadoCampos.correo = valido;
+      mostrarResultado("campo-correo", "mensaje-correo", valido, texto);
+      actualizarEstadoGeneral();
+    }
+
+    function validarTelefono() {
+      const valor = document.getElementById("telefono").value.replace(/\s+/g, "");
+      let valido = false;
+      let texto = "";
+
+      if (valor.length === 0) {
+        texto = "Este campo es obligatorio.";
+      } else if (!/^\d{8}$/.test(valor)) {
+        texto = "Debe tener exactamente 8 dígitos.";
+      } else {
+        valido = true;
+        texto = "Teléfono válido.";
+      }
+
+      estadoCampos.telefono = valido;
+      mostrarResultado("campo-telefono", "mensaje-telefono", valido, texto);
+      actualizarEstadoGeneral();
+    }
+
+    function validarComensales() {
+      const valor = document.getElementById("comensales").value.trim();
+      let valido = false;
+      let texto = "";
+      const numero = Number(valor);
+
+      if (valor.length === 0) {
+        texto = "Este campo es obligatorio.";
+      } else if (!Number.isInteger(numero)) {
+        texto = "Ingresa un número entero.";
+      } else if (numero < 1 || numero > 12) {
+        texto = "Debe estar entre 1 y 12.";
+      } else {
+        valido = true;
+        texto = "Cantidad válida.";
+      }
+
+      estadoCampos.comensales = valido;
+      mostrarResultado("campo-comensales", "mensaje-comensales", valido, texto);
+      actualizarEstadoGeneral();
+    }
+
+    document.getElementById("nombre").addEventListener("input", validarNombre);
+    document.getElementById("correo").addEventListener("input", validarCorreo);
+    document.getElementById("telefono").addEventListener("input", validarTelefono);
+    document.getElementById("comensales").addEventListener("input", validarComensales);
+
+    document.getElementById("btnConfirmar").addEventListener("click", function () {
+      if (!document.getElementById("btnConfirmar").disabled) {
+        document.getElementById("estado").textContent = "Reserva enviada";
+      }
+    });
+  </script>
+
+</body>
+</html>
